@@ -1,5 +1,9 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
+
+import CSSModules from 'react-css-modules'
+import styles from './style.scss'
 
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
@@ -17,33 +21,34 @@ class Topics extends React.Component {
 
   // 服务器预加载内容
 
-  static loadData(option, callback) {
+  static loadData({ store, props }, callback) {
+
+    let state = store.getState()
 
     // 登录的用户，不服务端加载
-    if (option.userinfo) {
-      callback(null)
-    } else {
-
-      const tag = option.props.location.query.tag || ''
-
-      option.store.dispatch(loadTopics({
-        name: 'parent-node-list',
-        filters: {child:-1},
-        callback: (res)=>{
-
-          option.store.dispatch(loadTopics({
-            name: 'node-' + tag,
-            filters: { child:1, parent_id: tag },
-            callback: (res)=>{
-
-              callback(res.success ? null : true)
-            }
-          }))
-
-        }
-      }))
-
+    if (state.userinfo) {
+      return callback(null)
     }
+
+    const tag = props.location.query.tag || ''
+
+    store.dispatch(loadTopics({
+      name: 'parent-node-list',
+      filters: {child:-1},
+      callback: (res)=>{
+
+        store.dispatch(loadTopics({
+          name: 'node-' + tag,
+          filters: { child:1, parent_id: tag },
+          callback: (res)=>{
+
+            callback(res.success ? null : true)
+          }
+        }))
+
+      }
+    }))
+
   }
 
   constructor(props) {
@@ -60,17 +65,13 @@ class Topics extends React.Component {
     this.setState({
       edit: this.state.edit ? false : true
     })
-    
+
   }
 
   componentDidMount() {
 
-
     const self = this
-
     const { nodeList, loadTopics } = this.props
-
-    // console.log(this.props.location.query.tag)
 
     if (!nodeList.data) {
       loadTopics({
@@ -102,7 +103,7 @@ class Topics extends React.Component {
       <div>
         <Meta meta={{ title: '话题' }} />
         <Nav />
-        <div className="container">
+        <div className="container" styleName="box">
 
           <div className="container-tabs">
             <div>
@@ -121,6 +122,7 @@ class Topics extends React.Component {
 
 }
 
+Topics = CSSModules(Topics, styles)
 
 Topics.propTypes = {
   nodeList: PropTypes.object.isRequired,
@@ -140,5 +142,7 @@ const mapDispatchToProps = (dispatch, props) => {
 }
 
 Topics = connect(mapStateToProps, mapDispatchToProps)(Topics)
+
+
 
 export default Shell(Topics)

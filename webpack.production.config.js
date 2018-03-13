@@ -5,6 +5,7 @@ var path = require('path');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CleanWebpackPlugin = require('clean-webpack-plugin');
 // var OfflinePlugin = require('offline-plugin');
+// var CompressionPlugin = require("compression-webpack-plugin");
 
 var ROOT_PATH = path.resolve(__dirname);
 var NODE_MODULES_PATH = path.resolve(ROOT_PATH, 'node_modules');
@@ -52,7 +53,7 @@ module.exports = {
       { test: /\.css$/, loader: ExtractTextPlugin.extract('style', 'css') },
       {
         test: /\.scss$/i,
-        loader: ExtractTextPlugin.extract('style', `css?modules&importLoaders=1&localIdentName=${config.classScopedName}!resolve-url!sass`),
+        loader: ExtractTextPlugin.extract('style', `css?modules&importLoaders=1&localIdentName=${config.class_scoped_name}!resolve-url!sass`),
         include: path.resolve(__dirname, 'src')
       },
       { test: /\.(png|jpg|gif)$/, loader: 'url?limit=40000' },
@@ -100,17 +101,26 @@ module.exports = {
       template: 'src/view/index.html',
       public_path: config.public_path + '/',
       cdn: config.qiniu.url + '/',
+      analysis_script: config.analysis_script,
       meta: '<%- meta %>',
       htmlDom: '<%- html %>',
       reduxState: '<%- reduxState %>'
     }),
 
-    new HtmlwebpackPlugin({
-      filename: path.resolve(__dirname, 'dist/not-found.ejs'),
-      template: 'src/view/not-found.html',
-      public_path: config.public_path + '/',
-      cdn: config.qiniu.url + '/'
-    }),
+    // new CompressionPlugin({
+    //   asset: "[path].gz[query]",
+    //   algorithm: "gzip",
+    //   test: /\.js$|\.css$|\.html$/,
+    //   threshold: 10240,
+    //   minRatio: 0.8
+    // })
+
+    // new HtmlwebpackPlugin({
+    //   filename: path.resolve(__dirname, 'dist/not-found.ejs'),
+    //   template: 'src/view/not-found.html',
+    //   public_path: config.public_path + '/',
+    //   cdn: config.qiniu.url + '/'
+    // }),
 
     // new CopyWebpackPlugin([
     //   { from: '/dist', ignore: '.*' }

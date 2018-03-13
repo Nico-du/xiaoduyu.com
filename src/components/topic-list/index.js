@@ -1,7 +1,7 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 
-import styles from './style.scss'
 import arriveFooter from '../../common/arrive-footer'
 
 import { bindActionCreators } from 'redux'
@@ -12,7 +12,7 @@ import { getTopicListByName } from '../../reducers/topic'
 import TopicItem from '../topic-item'
 import ListLoading from '../list-loading'
 
-class FollowNodesList extends Component {
+export class TopicList extends Component {
 
   constructor(props) {
     super(props)
@@ -30,10 +30,10 @@ class FollowNodesList extends Component {
 
     const self = this
 
-    const { nodeList } = this.props
+    const { topicList } = this.props
     const { name } = this.state
 
-    if (!nodeList.data) {
+    if (!topicList.data) {
       self.triggerLoad()
     }
 
@@ -66,10 +66,10 @@ class FollowNodesList extends Component {
   }
 
   _triggerLoad(callback = ()=>{}) {
-    const { loadNodes } = this.props
+    const { loadTopics } = this.props
     const { name, filters } = this.state
 
-    loadNodes({
+    loadTopics({
       name,
       filters,
       callback
@@ -78,39 +78,43 @@ class FollowNodesList extends Component {
   }
 
   render () {
-    const { nodeList } = this.props
+    const { topicList } = this.props
 
-    if (!nodeList.data) {
+    if (!topicList.data) {
       return (<div></div>)
     }
 
     return (<div className="container">
-      <ul className={styles.list}>
-        {nodeList.data.map((node, index) => {
-          return(<li key={node._id}><TopicItem node={node} /></li>)
+      <ul>
+        {topicList.data.map((topic, index) => {
+          return(<li key={topic._id}><TopicItem topic={topic} /></li>)
         })}
-        <ListLoading loading={nodeList.loading} more={nodeList.more} handleLoad={this.triggerLoad} />
+        <ListLoading
+          loading={topicList.loading}
+          more={topicList.more}
+          handleLoad={this.triggerLoad}
+          />
       </ul>
     </div>)
   }
 
 }
 
-FollowNodesList.propTypes = {
-  loadNodes: PropTypes.func.isRequired,
-  nodeList: PropTypes.object.isRequired
+TopicList.propTypes = {
+  loadTopics: PropTypes.func.isRequired,
+  topicList: PropTypes.object.isRequired
 }
 
 const mapStateToProps = (state, props) => {
   return {
-    nodeList: getTopicListByName(state, props.name)
+    topicList: getTopicListByName(state, props.name)
   }
 }
 
 const mapDispatchToProps = (dispatch, props) => {
   return {
-    loadNodes: bindActionCreators(loadTopics, dispatch)
+    loadTopics: bindActionCreators(loadTopics, dispatch)
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(FollowNodesList)
+export default connect(mapStateToProps, mapDispatchToProps)(TopicList)

@@ -1,47 +1,41 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import CSSModules from 'react-css-modules'
 
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import { addAccessToken } from '../../actions/sign'
-
+import { saveSignInCookie } from '../../actions/sign'
+import styles from './style.scss'
 import Shell from '../../shell'
 
-class Oauth extends React.PureComponent {
+class OAuth extends Component {
 
   constructor(props) {
     super(props)
   }
-
+  
   componentDidMount() {
-    const { access_token = '', expires = 0 } = this.props.location.query
+    const { access_token = '', expires = 0, landing_page = '/' } = this.props.location.query
     const { addAccessToken } = this.props
+
     if (access_token) {
-      addAccessToken({ access_token, expires })
-      window.location.href = '/'
+      saveSignInCookie({
+        access_token,
+        callback: (res)=>{
+          if (res.success) {
+            window.location.href = landing_page
+          } else {
+            alert('登录失败')
+            window.location.href = '/'
+          }
+        }
+      })
     }
   }
 
   render() {
-    return (<div>跳转中...</div>)
+    return (<div styleName="container">登录跳转中...</div>)
   }
 
 }
 
-Oauth.propTypes = {
-  addAccessToken: PropTypes.func.isRequired
-}
+OAuth = CSSModules(OAuth, styles)
 
-function mapStateToProps(state) {
-  return {
-  }
-}
-
-function mapDispatchToProps(dispatch) {
-  return {
-    addAccessToken: bindActionCreators(addAccessToken, dispatch)
-  }
-}
-
-Oauth = connect(mapStateToProps, mapDispatchToProps)(Oauth)
-
-export default Shell(Oauth)
+export default Shell(OAuth)

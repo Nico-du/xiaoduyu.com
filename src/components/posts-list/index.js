@@ -1,7 +1,6 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
-
-// import styles from './style.scss'
 
 // 依赖的外部功能
 import arriveFooter from '../../common/arrive-footer'
@@ -15,22 +14,23 @@ import { getPostsListByName } from '../../reducers/posts'
 import ListLoading from '../list-loading'
 import PostsItem from '../posts-item'
 
-class PostsList extends Component {
+export class PostsList extends Component {
 
   constructor(props) {
     super(props)
+    this.loadDate = this.loadDate.bind(this)
   }
 
   componentDidMount() {
 
-    const { questionList, loadPostsList, name, filters } = this.props
+    const { postsList, loadPostsList, name, filters } = this.props
 
-    if (!questionList.data) {
-      loadPostsList({ name, filters })
+    if (!postsList.data) {
+      this.loadDate()
     }
 
     arriveFooter.add(name, ()=>{
-      loadPostsList({ name, filters })
+      this.loadDate()
     })
   }
 
@@ -39,37 +39,45 @@ class PostsList extends Component {
     arriveFooter.remove(name)
   }
 
-  /*
+  loadDate() {
+    const { name, filters, loadPostsList } = this.props
+    loadPostsList({ name, filters })
+  }
+
   componentWillReceiveProps(props) {
-
-    if (props.update != this.props.update) {
-
-      const { resetNewQuestionList, loadQuestions } = this.props
-
-      // console.log(props.update + '|' + this.props.update)
-
-      resetNewQuestionList({ name: props.name, filters: props.filters })
-      loadQuestions()
+    if (props.timestamp != this.props.timestamp) {
+      const { loadPostsList } = this.props
+      loadPostsList({ name: props.name, filters: props.filters, restart: true })
     }
   }
-  */
 
   render () {
-    const { displayDate = true, questionList, loadPostsList } = this.props
+    const { displayFollow = false, displayDate = true, postsList, loadPostsList, commentOption = {} } = this.props
 
     // 当没有数据的情况
-    if (typeof questionList.data == "undefined") {
+    if (typeof postsList.data == "undefined") {
       return (<div></div>)
     }
 
-    const { data, loading, more } = questionList
+    const { data, loading, more } = postsList
 
     return (
       <div>
-        {data.map(question=>{
-          return (<div key={question._id}><PostsItem question={question} displayDate={displayDate} /></div>)
+        {data.map(posts=>{
+          return (<div key={posts._id}>
+              <PostsItem
+              posts={posts}
+              displayFollow={displayFollow}
+              displayDate={displayDate}
+              commentOption={commentOption}
+              />
+            </div>)
         })}
-        <ListLoading loading={loading} more={more} handleLoad={loadPostsList} />
+        <ListLoading
+          loading={loading}
+          more={more}
+          handleLoad={loadPostsList}
+          />
       </div>
     )
   }
@@ -77,13 +85,13 @@ class PostsList extends Component {
 }
 
 PostsList.propTypes = {
-  questionList:  PropTypes.object.isRequired
+  postsList:  PropTypes.object.isRequired
 }
 
 const mapStateToProps = (state, props) => {
   const { name } = props
   return {
-    questionList: getPostsListByName(state, name)
+    postsList: getPostsListByName(state, name)
   }
 }
 

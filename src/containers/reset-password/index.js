@@ -1,20 +1,19 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { signout } from '../../actions/sign'
-import { getUserInfo } from '../../reducers/user'
 
 import { resetPassword } from '../../actions/account'
 
 import Shell from '../../shell'
 import Meta from '../../components/meta'
-// import Nav from '../../components/nav'
 import Subnav from '../../components/subnav'
 
 
-class ResetPassword extends Component {
+export class ResetPassword extends Component {
 
   constructor(props) {
     super(props)
@@ -31,20 +30,9 @@ class ResetPassword extends Component {
     const { resetPassword } = this.props
     const { currentPassword, newPassword, confirmNewPassword } = this.refs
 
-    if (!currentPassword.value) {
-      currentPassword.focus()
-      return
-    }
-
-    if (!newPassword.value) {
-      newPassword.focus()
-      return
-    }
-
-    if (!confirmNewPassword.value) {
-      confirmNewPassword.focus()
-      return
-    }
+    if (!currentPassword.value) return currentPassword.focus()
+    if (!newPassword.value) return newPassword.focus()
+    if (!confirmNewPassword.value) return confirmNewPassword.focus()
 
     if (newPassword.value != confirmNewPassword.value) {
       alert('新密码两次输入不相同')
@@ -56,8 +44,9 @@ class ResetPassword extends Component {
           if (!result.success) {
             alert(result.error)
           } else {
-            alert('密码修改成功')
-            self.context.router.goBack()
+            alert('密码修改成功，请重新登录')
+            window.location.href = '/'
+            // self.context.router.goBack()
           }
         }
       })
@@ -66,7 +55,7 @@ class ResetPassword extends Component {
 
   render() {
 
-    const { user } = this.props
+    // const { user } = this.props
 
     return (
       <div>
@@ -97,13 +86,13 @@ ResetPassword.contextTypes = {
 }
 
 ResetPassword.propTypes = {
-  user: PropTypes.object.isRequired,
+  // user: PropTypes.object.isRequired,
   resetPassword: PropTypes.func.isRequired
 }
 
 function mapStateToProps(state) {
   return {
-    user: getUserInfo(state)
+    // user: getUserInfo(state)
   }
 }
 

@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 
 import arriveFooter from '../../common/arrive-footer'
@@ -11,7 +12,7 @@ import { getPeopleListByName } from '../../reducers/follow-people'
 import PeopleItem from '../people-item'
 import ListLoading from '../list-loading'
 
-class PeopleList extends Component{
+export class FollowPeopleList extends Component{
 
   constructor(props) {
     super(props)
@@ -87,7 +88,7 @@ class PeopleList extends Component{
 
 }
 
-PeopleList.propTypes = {
+FollowPeopleList.propTypes = {
   loadFollowPeoples: PropTypes.func.isRequired,
   loadFans: PropTypes.func.isRequired,
   peopleList: PropTypes.object.isRequired
@@ -106,4 +107,4 @@ const mapDispatchToProps = (dispatch, props) => {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(PeopleList)
+export default connect(mapStateToProps, mapDispatchToProps)(FollowPeopleList)

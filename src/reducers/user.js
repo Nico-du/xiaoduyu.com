@@ -1,42 +1,38 @@
 
 import merge from 'lodash/merge'
-import cookie from 'react-cookie'
-import { auth_cookie_name } from '../../config'
 
 let initialState = {
   profile: {},
-  unreadNotice: 0,
-  accessToken: ''
+  unreadNotice: [],
+  accessToken: '',
+  expires: 0
 }
 
-export default function user(state = initialState, action) {
+export default function user(state = initialState, action = {}) {
 
   switch (action.type) {
 
     case 'ADD_ACCESS_TOKEN':
       state.accessToken = action.access_token
-      let expires = action.expires || null
-      let option = { path: '/' }
-
-      if (expires) {
-        option.expires = new Date(action.expires)
-        cookie.save('expires', expires, option)
-      }
-
-      cookie.save(auth_cookie_name, state.accessToken, option)
-      return state
+      state.expires = parseInt(action.expires)
+      return merge({}, state, {})
 
     case 'REMOVE_ACCESS_TOKEN':
       state.accessToken = ''
-      cookie.remove(auth_cookie_name, { path: '/' })
+      state.expires = 0
       return state
-
+      
     case 'SET_USER':
       state.profile = action.userinfo
       return merge({}, state, {})
 
     case 'SET_UNREAD_NOTICE':
       state.unreadNotice = action.unreadNotice
+      return merge({}, state, {})
+
+    case 'REMOVE_UNREAD_NOTICE':
+      let index = state.unreadNotice.indexOf(action.id)
+      if (index != -1) state.unreadNotice.splice(index, 1)
       return merge({}, state, {})
 
     default:
@@ -54,7 +50,7 @@ export function getProfile(state) {
 }
 
 export function getUnreadNotice(state) {
-  return state.user.unreadNotice || 0
+  return state.user.unreadNotice || []
 }
 
 export const getAccessToken = (state) => state.user.accessToken

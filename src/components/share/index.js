@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
 import { Link, IndexLink } from 'react-router'
 import QRCode from 'qrcode.react'
@@ -28,7 +29,7 @@ function QueryString() {
   }
 }
 
-class Share extends Component {
+export class Share extends Component {
 
   constructor(props) {
     super(props)
@@ -41,7 +42,7 @@ class Share extends Component {
 
     this.state = {
       title: title,
-      url: config.url + url,
+      url: config.domain_name + url,
       displayTips: false,
       showQrcode: false
     }
@@ -73,6 +74,7 @@ class Share extends Component {
   }
 
   _shareToWeiXin() {
+
     if (weixin.in) {
       this.showTips(true)
     } else {
@@ -99,9 +101,9 @@ class Share extends Component {
     return (<div>
         <ul className={styles.share}>
           {weixin.in ? null:
-            <li><a href="javascript:void(0);" onClick={this.shareToWeiXin}>微信</a></li>}
-          <li><a href="javascript:void(0);" onClick={this.shareToWeibo}>微博</a></li>
-          <li><a href="javascript:void(0);" onClick={this.shareToTwitter}>Twitter</a></li>
+            <li><a href="javascript:void(0);" className="share-to-weixin" onClick={this.shareToWeiXin}>微信</a></li>}
+          <li><a href="javascript:void(0);" className="share-to-weibo" onClick={this.shareToWeibo}>微博</a></li>
+          <li><a href="javascript:void(0);" className="share-to-twitter" onClick={this.shareToTwitter}>Twitter</a></li>
         </ul>
 
         {showQrcode ? <div className={styles.mark} onClick={()=>{this.showQRcode(false)}}></div>: null}

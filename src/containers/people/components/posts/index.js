@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
 import Shell from '../../../../shell'
@@ -9,20 +9,20 @@ import { connect } from 'react-redux'
 import { loadPeopleById } from '../../../../actions/people'
 import { loadPostsList } from '../../../../actions/posts'
 
-class PeoplePosts extends React.Component {
+export class PeoplePosts extends React.Component {
 
   // 服务器预加载内容
-  static loadData(option, callback) {
+  static loadData({ store, props }, callback) {
 
-    const { id } = option.props.params
-    const { dispatch } = option.store
+    const { id } = props.params
+    const { dispatch } = store
 
     dispatch(loadPeopleById({
       id,
       callback:(people)=>{
 
         if (!people) {
-          callback('not found')
+          callback(404)
           return;
         }
 
@@ -38,10 +38,6 @@ class PeoplePosts extends React.Component {
   }
 
   render() {
-
-    // console.log(this)
-
-    // return (<div>11111</div>)
 
     const { people } = this.props
 

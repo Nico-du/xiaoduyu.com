@@ -1,5 +1,7 @@
 import { combineReducers } from 'redux'
 
+import merge from 'lodash/merge'
+
 import scroll from './scroll'
 import sign from './sign'
 import user from './user'
@@ -10,8 +12,11 @@ import followPeople from './follow-people'
 import posts from './posts'
 import topic from './topic'
 import comment from './comment'
+import website from './website'
+import postsTypes from './posts-types'
+import countries from './countries'
 
-export default combineReducers({
+let states = {
   scroll,
   sign,
   user,
@@ -21,5 +26,21 @@ export default combineReducers({
   followPeople,
   topic,
   posts,
-  comment
-})
+  comment,
+  website,
+  postsTypes,
+  countries
+}
+
+let _states = {}
+
+for (let i in states) {
+  _states[i] = states[i]()
+}
+
+
+export default combineReducers(states)
+
+export const getInitialState = () => {
+  return merge({}, _states, {})
+}

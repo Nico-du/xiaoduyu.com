@@ -1,25 +1,23 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link, browserHistory } from 'react-router'
 
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { signout } from '../../actions/sign'
 import { getProfile } from '../../reducers/user'
 import { bindingEmail } from '../../actions/account'
-import { addCaptcha } from '../../actions/captcha'
+import { loadUserInfo } from '../../actions/user'
 
 import Shell from '../../shell'
 import Subnav from '../../components/subnav'
+import CaptchaButton from '../../components/captcha-button'
 
-class BindingEmail extends Component {
+export class BindingEmail extends Component {
 
   constructor(props) {
     super(props)
-    this.state = {
-      disabled: false
-    }
     this.submit = this.submit.bind(this)
-    this.sendVerifyCode = this.sendVerifyCode.bind(this)
+    this.sendCaptcha = this.sendCaptcha.bind(this)
   }
 
   componentWillMount() {
@@ -37,79 +35,41 @@ class BindingEmail extends Component {
   submit() {
 
     const self = this
-    const { bindingEmail } = this.props
-    const { code, email, password } = this.refs
+    const { bindingEmail, loadUserInfo } = this.props
+    const { code, email } = this.refs
 
-    if (!code.value) {
-      code.focus()
-      return
-    }
-
-    if (!email.value) {
-      email.focus()
-      return
-    }
-
-    if (!password.value) {
-      password.focus()
-      return
-    }
+    if (!code.value) return code.focus()
+    if (!email.value) return email.focus()
 
     bindingEmail({
       captcha: code.value,
       email: email.value,
-      password: password.value,
       callback: function(result){
-        alert(result.success ? '发送成功' : '发送失败')
+        alert(result.success ? '绑定成功' : '绑定失败')
+        loadUserInfo({})
+        self.context.router.goBack()
       }
     })
 
   }
 
-  sendVerifyCode() {
-
-    const { addCaptcha } = this.props
+  sendCaptcha(callback) {
     const { email } = this.refs
-
-    if (!email.value) {
-      email.focus()
-      return
-    }
-
-    addCaptcha({
-        email: email.value,
-        type: 'binding-email'
-      },
-      function(result) {
-        alert(result.success ? '发送成功' : '发送失败')
-    })
-
+    if (!email.value) return email.focus()
+    callback({ email: email.value, type: 'binding-email' })
   }
 
   render() {
 
-    const { disabled } = this.state
-
     return (
       <div>
-        <Subnav
-          middle="验证码邮箱"
-        />
+        <Subnav middle="验证码邮箱" />
         <div className="container">
-
+          
           <div className="list">
             <input type="text" placeholder="请输入你要绑定的邮箱" ref="email" />
-          </div>
-
-          <div className="list">
-            <div>
-              <input type="text" placeholder="输入6位数验证码" ref="code" />
-              <input type="submit" onClick={this.sendVerifyCode} value="获取验证码" disabled={disabled} />
-            </div>
-          </div>
-
-          <div className="list">
-            <input type="password" placeholder="请输入密码" ref="password" />
+            <input type="text" placeholder="输入6位数验证码" ref="code" />
+            <div><CaptchaButton onClick={this.sendCaptcha} /></div>
           </div>
 
           <div className="list">
@@ -130,8 +90,8 @@ BindingEmail.contextTypes = {
 
 BindingEmail.propTypes = {
   me: PropTypes.object.isRequired,
-  addCaptcha: PropTypes.func.isRequired,
-  bindingEmail: PropTypes.func.isRequired
+  bindingEmail: PropTypes.func.isRequired,
+  loadUserInfo: PropTypes.func.isRequired,
 }
 
 function mapStateToProps(state) {
@@ -142,8 +102,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    addCaptcha: bindActionCreators(addCaptcha, dispatch),
-    bindingEmail: bindActionCreators(bindingEmail, dispatch)
+    bindingEmail: bindActionCreators(bindingEmail, dispatch),
+    loadUserInfo: bindActionCreators(loadUserInfo, dispatch)
   }
 }
 

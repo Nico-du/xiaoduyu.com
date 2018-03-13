@@ -1,8 +1,7 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
 import Shell from '../../../../shell'
-// import QuestionList from '../../../../components/question-list'
 
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
@@ -10,20 +9,20 @@ import { loadPeopleById } from '../../../../actions/people'
 import { loadCommentList } from '../../../../actions/comment'
 import CommentList from '../../../../components/comment-list'
 
-class PeopleAnswers extends React.Component {
+export class PeoplePosts extends React.Component {
 
   // 服务器预加载内容
-  static loadData(option, callback) {
+  static loadData({ store, props }, callback) {
 
-    const { id } = option.props.params
-    const { dispatch } = option.store
+    const { id } = props.params
+    const { dispatch } = store
 
     dispatch(loadPeopleById({
       id,
       callback:(people)=>{
 
         if (!people) {
-          callback('not found')
+          callback(404)
           return;
         }
 
@@ -53,4 +52,4 @@ class PeopleAnswers extends React.Component {
 
 }
 
-export default Shell(PeopleAnswers)
+export default Shell(PeoplePosts)

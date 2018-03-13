@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
@@ -13,7 +14,7 @@ import Nav from '../../components/nav'
 import Subnav from '../../components/subnav'
 import NodeList from '../../components/topic-list'
 
-class AllNode extends React.Component {
+export class AllTopic extends React.Component {
 
   constructor(props) {
     super(props)
@@ -53,7 +54,7 @@ class AllNode extends React.Component {
 
 }
 
-AllNode.propTypes = {
+AllTopic.propTypes = {
   isSignin: PropTypes.bool.isRequired,
   me: PropTypes.object.isRequired
 }
@@ -70,7 +71,7 @@ function mapDispatchToProps(dispatch) {
   }
 }
 
-AllNode = connect(mapStateToProps, mapDispatchToProps)(AllNode)
+AllTopic = connect(mapStateToProps, mapDispatchToProps)(AllTopic)
 
 
-export default Shell(AllNode)
+export default Shell(AllTopic)

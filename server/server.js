@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 // import favicon from 'serve-favicon';
 import cookieParser from 'cookie-parser'
 import bodyParser from 'body-parser';
@@ -16,7 +17,7 @@ app.use(compression());
 // app.use(methodOverride());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser('xiaoduyu'));
+app.use(cookieParser(config.auth_cookie_name));
 // app.use(favicon(`${__dirname}/../public/favicon.ico`));
 
 // 如果不是开发环境，那么启动热更新
@@ -44,9 +45,36 @@ app.use(function (req, res, next) {
 
 app.use(express.static(__dirname + '/../dist'))
 app.use(express.static(__dirname + '/../public'))
-app.use(express.static(__dirname + '/../xiaoduyu.com'))
+
+if (config.ssl_verification_path) {
+  app.use(express.static(path.join(__dirname, config.ssl_verification_path)));
+}
+
+
+app.use('/sign', (function(){
+
+  var router = express.Router();
+
+  router.post('/in', (req, res)=>{
+    let accessToken = req.body.access_token || null;
+    if (!accessToken) return res.send({ success: false })
+
+    // let expires = req.body.expires;
+    res.cookie(config.auth_cookie_name, accessToken, { path: '/', httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 30 })
+    res.send({ success: true })
+  })
+
+  router.post('/out', (req, res)=>{
+    res.clearCookie(config.auth_cookie_name)
+    res.send({ success: true })
+  })
+
+  return router
+
+}()));
 
 app.use('/', ssrRouter);
+
 app.disable('x-powered-by');
 
 const server = app.listen(config.port, () => {

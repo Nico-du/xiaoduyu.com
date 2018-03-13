@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 
 import styles from './style.scss'
@@ -14,11 +15,11 @@ import { DateDiff } from '../../common/date'
 import ListLoading from '../list-loading'
 import HTMLText from '../html-text'
 
-class NotificationList extends Component {
+export class NotificationList extends Component {
 
   constructor(props) {
     super(props)
-    this.handleLoad = this._handleLoad.bind(this)
+    this.handleLoad = this.handleLoad.bind(this)
   }
 
   componentWillMount() {
@@ -39,7 +40,7 @@ class NotificationList extends Component {
     arriveFooter.remove('index')
   }
 
-  _handleLoad() {
+  handleLoad() {
 
     const { name, filters, loadNotifications } = this.props
 
@@ -52,6 +53,10 @@ class NotificationList extends Component {
 
     if (!notification.data) {
       return (<div></div>)
+    }
+
+    if (notification.data && notification.data.length == 0) {
+      return (<div className={styles.nothing}>没有通知</div>)
     }
 
     const { data, loading, more } = notification
@@ -81,6 +86,17 @@ class NotificationList extends Component {
                       <div className={styles.header}>
                         <Link to={`/people/${notice.sender_id._id}`}>{avatar}{notice.sender_id.nickname}</Link>
                         {DateDiff(notice.create_at)} 关注了你的
+                        <Link to={`/posts/${notice.posts_id._id}`}>{notice.posts_id.title}</Link>
+                        {notice.posts_id.type == 1 ?  '分享' : '提问'}
+                      </div>
+                    </div>)
+                  break
+
+                case 'like-posts':
+                  content = (<div>
+                      <div className={styles.header}>
+                        <Link to={`/people/${notice.sender_id._id}`}>{avatar}{notice.sender_id.nickname}</Link>
+                        {DateDiff(notice.create_at)} 赞了你的
                         <Link to={`/posts/${notice.posts_id._id}`}>{notice.posts_id.title}</Link>
                         {notice.posts_id.type == 1 ?  '分享' : '提问'}
                       </div>
@@ -128,7 +144,7 @@ class NotificationList extends Component {
                     <div className={styles.header}>
                       <Link to={`/people/${notice.sender_id._id}`}>{avatar}{notice.sender_id.nickname}</Link>
                       {DateDiff(notice.create_at)} 赞了你的
-                      <Link to={`/answer/${notice.comment_id.parent_id._id}`}>{notice.comment_id.content_trim}</Link>
+                      <Link to={`/comment/${notice.comment_id.parent_id._id}`}>{notice.comment_id.content_trim}</Link>
                       回复
                     </div>
                   </div>)
@@ -139,7 +155,7 @@ class NotificationList extends Component {
                     <div className={styles.header}>
                       <Link to={`/people/${notice.sender_id._id}`}>{avatar}{notice.sender_id.nickname}</Link>
                       {DateDiff(notice.create_at)} 赞了你的
-                      <Link to={`/answer/${notice.comment_id._id}`}>{notice.comment_id.content_trim}</Link>
+                      <Link to={`/comment/${notice.comment_id._id}`}>{notice.comment_id.content_trim}</Link>
                       评论
                     </div>
                   </div>)
@@ -155,7 +171,7 @@ class NotificationList extends Component {
                       {notice.comment_id.posts_id.type == 1 ?  '分享' : '提问'}
                     </div>
                     <div className={styles.content}>
-                      <Link to={`/answer/${notice.comment_id._id}`}>{notice.comment_id.content_trim}</Link>
+                      <Link to={`/comment/${notice.comment_id._id}`}>{notice.comment_id.content_trim}</Link>
                     </div>
                   </div>)
                   break
@@ -195,6 +211,6 @@ function mapDispatchToProps(dispatch, props) {
   }
 }
 
-NotificationList = connect(mapStateToProps, mapDispatchToProps)(NotificationList)
+export default connect(mapStateToProps, mapDispatchToProps)(NotificationList)
 
-export default NotificationList
+// export default NotificationList

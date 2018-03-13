@@ -1,12 +1,11 @@
-import React, { Component, PropTypes } from 'react'
-import ReactDOM from 'react-dom'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link, browserHistory } from 'react-router'
 
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { getLastHistory } from '../../reducers/history'
 
-// import Weixin from '../../common/weixin'
 import styles from './style.scss'
 
 // 获取url中的参数，并返回
@@ -27,7 +26,7 @@ function QueryString() {
   }
 }
 
-class SubNav extends Component {
+export class SubNav extends Component {
 
   constructor(props) {
     super(props)
@@ -44,22 +43,19 @@ class SubNav extends Component {
     if (!hasHistory) {
       browserHistory.push('/')
     } else {
-
       if (typeof go != 'undefined' && !isNaN(go)) {
         this.context.router.go(go)
       } else {
         this.context.router.goBack()
       }
-
     }
 
   }
 
   render() {
-
+    
     const { left = '返回', middle = '', right = '' } = this.props
     let back = <a href="javascript:;" onClick={this.navigateBack}>{left}</a>
-
 
     if (typeof window == 'undefined' || typeof document == 'undefined') {
     } else {
@@ -68,10 +64,6 @@ class SubNav extends Component {
         back = <Link to={params.subnav_back}>{left}</Link>
       }
     }
-
-    // if (Weixin.in) {
-    //   return (<div></div>)
-    // }
 
     return (
       <div>

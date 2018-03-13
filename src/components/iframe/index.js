@@ -1,23 +1,25 @@
 "use strict";
 var React = require("react");
-var Iframe = React.createClass({
-    displayName: "iframe",
 
-    propTypes: {
-        src: React.PropTypes.string.isRequired
-    },
+class Iframe extends React.Component {
+// var Iframe = React.createClass({
+    // displayName: "iframe"
 
-    getDefaultProps:function(){
-      return {
-      }
-    },
+    // propTypes: {
+    //     src: React.PropTypes.string.isRequired
+    // }
 
-    shouldComponentUpdate: function(nextProps) {
+    // getDefaultProps () {
+    //   return {
+    //   }
+    // }
+
+    shouldComponentUpdate (nextProps) {
       return this.props.src !== nextProps.src;
-    },
+    }
 
-    render: function() {
-
+    render () {
+      const { src, width = 'auto', height = 'auto' } = this.props
 /*
 allowFullScreen="true"
 quality="high"
@@ -28,11 +30,15 @@ allowfullscreen
  */
 
         return (
-            <iframe ref="iframe" src={this.props.src}></iframe>
+          <iframe ref="iframe" src={src} width={width} height={height}></iframe>
         )
 
 
     }
-});
+}
+
+Iframe.propTypes = {
+  src: React.PropTypes.string.isRequired
+}
 
 module.exports = Iframe;

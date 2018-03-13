@@ -1,28 +1,35 @@
 @import "../../containers/global/base.scss";
 
-.item{
-  background-color: #fff;
-  padding:15px 15px 2px 70px;
-  border-bottom:1px solid $light-gray;
+.box{
+  margin-bottom: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+  // border-bottom: 1px solid #efefef;
 }
 
+.item{
+  position: relative;
+  background-color: #fff;
+  padding:15px 20px 15px 20px;
 
-
-
-.title{
-  font-size: 15px;
-  word-break:break-all; /*支持IE，chrome，FF不支持*/
-  word-wrap:break-word; /*支持IE，chrome，FF*/
-  color:#333;
+  @include boxSizing();
+  &:hover{
+    background-color: rgba(255,255,255,.7);
+    @include cursorHand;
+  }
 }
 
 .head{
-
   font-size: 12px;
+  z-index: 999;
+  margin-bottom: 10px;
+  padding-left:50px;
 
   .avatar{
+
     position: absolute;
-    margin:-1px 0 0 -55px;
+    top: 15px;
+    left: 20px;
     width: 40px;
     height: 40px;
     background-color: #efefef;
@@ -32,24 +39,52 @@
       width: 40px;
       height: 40px;
     }
+
+    /*
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 45px;
+    height: 45px;
+    background-color: #efefef;
+    border-radius: 50%;
+    overflow: hidden;
+    img{
+      width: 45px;
+      height: 45px;
+    }
+    */
   }
 
   .right{
     float:right;
-    a{
-      color:#555;
-    }
   }
 
   .info{
 
     width:100%;
+    line-height: 20px;
 
-    span{
-      color:#cccccc;
+    a{
+      color:#ABA8A6;
+    }
+
+    b{
+      font-size: 13px;
+      font-weight: 500;
+      color:#222;
+    }
+
+    a:hover{
+      text-decoration: underline;
+    }
+
+    div > span{
+
+      color:#ABA8A6;
 
       &:after{
-        color:#d8d8d8;
+        color:#ABA8A6;
         font-size: 9px;
         margin:0 5px 0 5px;
         content: '•';
@@ -59,48 +94,117 @@
         content: '';
       }
 
-      a{
-        color:#555;
-      }
-
     }
 
+  }
+
+}
+
+.title{
+  font-size: 17px;
+  word-break:break-all;
+  word-wrap:break-word;
+  font-weight: bold;
+  a{
+    color:#333 !important;
+  }
+
+  a:hover{
+    text-decoration: none;
+  }
+
+}
+
+.content{
+  font-size: 14px;
+  word-break:break-all;
+  word-wrap:break-word;
+  line-height: 22px;
+  margin-top: 2px;
+
+
+
+  /*
+  .images{
+    > div{
+      display: inline-block;
+      margin-right:10px;
+      margin-top:10px;
+    }
+    img{
+      max-height:150px;
+      // box-shadow: 0px 0px 1px rgba(0,0,0,.3);
+    }
+  }
+  */
+}
+
+.content-have-img{
+
+  // padding-left:200px;
+  min-height: 100px;
+
+  .images{
+    float:right;
+    // position: absolute;
+    // margin-left:-200px;
+    > div{
+      width: 150px;
+      height: 100px;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      border-radius: 5px;
+    }
   }
 
 }
 
 .comment-list{
-  margin-top:15px;
-  > div > div {
-    padding-left:45px !important;
-    padding-right:0px;
-  }
+  width: 100%;
+  // padding-left:50px;
+  // background-color: #fff;
 }
+
+/*
+.comment-main{
+  background-color: #fff;
+  // font-size: 13px;
+  // padding-top:25px;
+  // margin-top:25px;
+  // margin-bottom:10px;
+  border-radius:3px;
+  > div > div > div > div{
+
+    // display: inline-block;
+    // padding-left:120px;
+    // border:none;
+  }
+
+  .comment-list > div{
+    // display: inline-block;
+    // background-color: #333;
+    font-size: 11px;
+    > div > div{
+      padding:15px 25px 15px 65px;
+      margin:0px;
+      // padding:10px 40px 10px 0px;
+      // margin-left: 70px;
+    }
+  }
+
+}
+*/
 
 .view-more-comment{
-  padding:15px 0 15px 0;
-  border-top:1px solid $light-gray;
+  display: block;
+  padding:10px 0 10px 20px;
   font-size: 13px;
-}
+  border-top:1px solid $light-gray;
+  background-color: #fff;
 
-.item{
-
-  @include respond-to(sm) {
-    padding-left:55px;
+  @include boxSizing();
+  &:hover{
+    background-color: rgba(255,255,255,.7);
   }
-
-  .avatar{
-    @include respond-to(sm) {
-      width: 35px;
-      height: 35px;
-      margin-left:-45px;
-    }
-    img{
-      @include respond-to(sm) {
-        width: 35px;
-        height: 35px;
-      }
-    }
-  }
-
 }

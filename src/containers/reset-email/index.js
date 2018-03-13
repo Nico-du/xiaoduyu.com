@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 
 import { bindActionCreators } from 'redux'
@@ -10,11 +11,10 @@ import { getCaptchaByEmail, resetEmail } from '../../actions/account'
 
 import Shell from '../../shell'
 import Meta from '../../components/meta'
-// import Nav from '../../components/nav'
 import Subnav from '../../components/subnav'
 import CaptchaButton from '../../components/captcha-button'
 
-class ResetEmail extends Component {
+export class ResetEmail extends Component {
 
   constructor(props) {
     super(props)
@@ -78,14 +78,8 @@ class ResetEmail extends Component {
 
           <div className="list">
             <input type="text" placeholder="请输入新的邮箱" ref="newEmail" />
-          </div>
-
-          <div className="list">
-            <div>
-              <input type="text" placeholder="请输入验证码" ref="captcha" />
-              <CaptchaButton onClick={this.sendCaptcha} />
-              {/*<input type="submit" value="获取验证码" onClick={this.sendCaptcha} />*/}
-            </div>
+            <input type="text" placeholder="请输入验证码" ref="captcha" />
+            <div><CaptchaButton onClick={this.sendCaptcha} /></div>
           </div>
 
           <div className="list">

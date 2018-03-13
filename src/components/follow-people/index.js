@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 
 import { bindActionCreators } from 'redux'
@@ -6,7 +7,7 @@ import { connect } from 'react-redux'
 import { follow, unfollow } from '../../actions/follow-people'
 import { getProfile } from '../../reducers/user'
 
-class FollowPeople extends Component {
+export class FollowPeople extends Component {
 
   constructor(props) {
     super(props)
@@ -14,7 +15,7 @@ class FollowPeople extends Component {
   }
 
   _triggerFollow(e) {
-    
+
     e.preventDefault()
 
     const { unfollow, follow, people } = this.props

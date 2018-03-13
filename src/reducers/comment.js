@@ -7,7 +7,7 @@ let initialState = {
   }
 }
 
-export default function comment(state = initialState, action) {
+export default function comment(state = initialState, action = {}) {
   switch (action.type) {
 
     case 'SET_COMMENT_LIST_BY_NAME':
@@ -58,6 +58,8 @@ export const getCommentListByName = (state, name) => {
 export const getCommentById = (state, id) => {
 
   let commentList = state.comment
+
+  // if (commentList[id]) return commentList[id].data
 
   for (let i in commentList) {
     let list = commentList[i].data

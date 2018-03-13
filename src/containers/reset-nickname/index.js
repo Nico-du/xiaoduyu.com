@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 
 import { bindActionCreators } from 'redux'
@@ -10,10 +11,9 @@ import { resetNickname, loadUserInfo } from '../../actions/user'
 
 import Shell from '../../shell'
 import Meta from '../../components/meta'
-// import Nav from '../../components/nav'
 import Subnav from '../../components/subnav'
 
-class ResetNickname extends Component {
+export class ResetNickname extends Component {
 
   constructor(props) {
     super(props)
@@ -42,7 +42,7 @@ class ResetNickname extends Component {
         if (!res.success) {
           alert(res.error)
         } else {
-          alert('昵称修改成功')
+          alert('提交成功')
           loadUserInfo({})
           self.context.router.goBack()
         }
@@ -53,21 +53,21 @@ class ResetNickname extends Component {
 
   render() {
 
-    const { user } = this.props
+    const { me } = this.props
 
     return (
       <div>
-        <Meta meta={{title:'修改名字'}} />
+        <Meta meta={{title:'名字'}} />
 
-        <Subnav middle="修改名字" />
+        <Subnav middle="名字" />
         <div className="container">
 
           <div className="list">
-            <input type="text" defaultValue={user.nickname} ref="nickname"></input>
+            <input type="text" defaultValue={me.nickname} ref="nickname" placeholder="请输入你的名字"></input>
           </div>
 
           <div className="list">
-            <a className="center" href="javascript:void(0);" onClick={this.submitResetPassword}>确认修改</a>
+            <a className="center" href="javascript:void(0);" onClick={this.submitResetPassword}>提交</a>
           </div>
 
         </div>
@@ -83,14 +83,14 @@ ResetNickname.contextTypes = {
 }
 
 ResetNickname.propTypes = {
-  user: PropTypes.object.isRequired,
+  me: PropTypes.object.isRequired,
   resetNickname: PropTypes.func.isRequired,
   loadUserInfo: PropTypes.func.isRequired
 }
 
 function mapStateToProps(state) {
   return {
-    user: getUserInfo(state)
+    me: getUserInfo(state)
   }
 }
 

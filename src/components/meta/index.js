@@ -1,16 +1,23 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import DocumentMeta from 'react-document-meta'
+
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import { getUnreadNotice } from '../../reducers/user'
 
 import config from '../../../config'
 import weixin from '../../common/weixin'
 
-class Meta extends Component {
+export class Meta extends Component {
 
   constructor(props) {
     super(props)
   }
 
   render() {
+
+    const { unreadNotice } = this.props
 
     let meta = {
       title: config.name,
@@ -22,11 +29,15 @@ class Meta extends Component {
       meta.title += ' - '+config.name
     }
 
+    if (unreadNotice.length > 0) {
+      meta.title = '('+unreadNotice.length+')' + meta.title
+    }
+
     if (weixin.in) {
       document.title = meta.title
       var oHead = document.getElementsByTagName('body')[0]
       var oScript= document.createElement("iframe")
-      oScript.src = 'https://ojkahzhlx.qnssl.com/64.png'
+      oScript.src = '//qncdn.xiaoduyu.com/64.png'
       // oScript.src = window.location.origin + "/favicon.png"
       oScript.style.display = 'none'
       oScript.onload = ()=> {
@@ -41,4 +52,19 @@ class Meta extends Component {
   }
 }
 
-export default Meta
+Meta.propTypes = {
+  unreadNotice: PropTypes.array.isRequired
+}
+
+const mapStateToProps = (state) => {
+  return {
+    unreadNotice: getUnreadNotice(state)
+  }
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+  }
+}
+
+export default connect(mapStateToProps,mapDispatchToProps)(Meta)

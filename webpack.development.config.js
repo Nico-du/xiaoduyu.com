@@ -53,7 +53,7 @@ module.exports = {
       {
         test: /\.scss$/i,
         loader: ExtractTextPlugin.extract('style',
-          `css?modules&importLoaders=1&localIdentName=${config.classScopedName}!resolve-url!sass`),
+          `css?modules&importLoaders=1&localIdentName=${config.class_scoped_name}!resolve-url!sass`),
         include: path.resolve(__dirname, 'src')
       },
       { test: /\.css$/, loader: ExtractTextPlugin.extract('style', 'css') },
@@ -83,17 +83,18 @@ module.exports = {
       template: 'src/view/index.html',
       public_path: config.public_path + '/',
       cdn: config.qiniu.url + '/',
+      analysis_script: config.analysis_script,
       meta: '<%- meta %>',
       htmlDom: '<%- html %>',
       reduxState: '<%- reduxState %>'
     }),
 
-    new HtmlwebpackPlugin({
-      filename: path.resolve(__dirname, 'dist/not-found.ejs'),
-      template: 'src/view/not-found.html',
-      public_path: config.public_path + '/',
-      cdn: config.qiniu.url + '/'
-    }),
+    // new HtmlwebpackPlugin({
+    //   filename: path.resolve(__dirname, 'dist/not-found.ejs'),
+    //   template: 'src/view/not-found.html',
+    //   public_path: config.public_path + '/',
+    //   cdn: config.qiniu.url + '/'
+    // }),
 
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.HotModuleReplacementPlugin(),

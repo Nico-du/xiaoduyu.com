@@ -1,13 +1,8 @@
 import merge from 'lodash/merge'
 
+let initialState = {}
 
-let initialState = {
-  other: {
-    data: []
-  }
-}
-
-export default function posts(state = initialState, action) {
+export default function posts(state = initialState, action = {}) {
   switch (action.type) {
 
     case 'SET_POSTS_LIST_BY_NAME':
@@ -15,10 +10,10 @@ export default function posts(state = initialState, action) {
       state[name] = data
       return merge({}, state, {})
 
-    case 'ADD_POSTS':
-      var { posts } = action
-      state.other.data = posts
-      return merge({}, state, {})
+    // case 'ADD_POSTS':
+    //   var { posts } = action
+    //   state.other.data = posts
+    //   return merge({}, state, {})
 
     case 'SET_POSTS':
       return merge({}, action.state, {})
@@ -40,6 +35,56 @@ export default function posts(state = initialState, action) {
       }
       return merge({}, state, {})
 
+    case 'UPDATE_POSTS_COMMENT_LIKE_STATUS':
+      var { id, status } = action
+
+      for (let i in state) {
+        let data = state[i].data
+
+        data.map(post=>{
+
+          if (post.comment && post.comment.length) {
+
+            post.comment.map(comment=>{
+              if (comment._id == id) {
+                comment.like_count += status ? 1 : -1
+                comment.like = status
+              }
+            })
+
+          }
+
+        })
+
+      }
+      return merge({}, state, {})
+
+    case 'UPDATE_POSTS_LIKE_STATUS':
+      var { id, status } = action
+
+      for (let i in state) {
+        let data = state[i].data
+        data.map(post=>{
+          if (post._id == id) {
+            post.like_count += status ? 1 : -1
+            post.like = status
+          }
+        })
+      }
+
+      return merge({}, state, {})
+
+    case 'UPDATE_POSTS_VIEW':
+      var { id } = action
+      for (let i in state) {
+        state[i].data.map(item => {
+          if (item._id == id) {
+            item.view_count += 1
+          }
+        })
+      }
+      return merge({}, state, {})
+    /*
     case 'UPDATE_ANSWER_LIKE_IN_POSTS':
       var { id, status } = action
 
@@ -59,6 +104,7 @@ export default function posts(state = initialState, action) {
         }
       }
       return merge({}, state, {})
+      */
 
     default:
       return state;

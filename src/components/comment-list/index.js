@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
 import { Link } from 'react-router'
 
@@ -9,15 +10,14 @@ import arriveFooter from '../../common/arrive-footer'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 
-import { showSign } from '../../actions/sign'
 import { getAccessToken } from '../../reducers/user'
 import { loadCommentList } from '../../actions/comment'
 import { getCommentListByName } from '../../reducers/comment'
 
 import ListLoading from '../list-loading'
-import AnswerItem from '../comment-item'
+import CommentItem from '../comment-item'
 
-class AnswerList extends Component {
+export class CommentList extends Component {
 
   constructor(props) {
     super(props)
@@ -34,20 +34,20 @@ class AnswerList extends Component {
   componentWillMount() {
 
     const self = this
-    const { loadCommentList, answerList } = this.props
+    const { loadCommentList, commentList } = this.props
 
-    if (!answerList.data) {
+    if (!commentList.data) {
       self.triggerLoad()
     }
 
-    arriveFooter.add(this.state.name, ()=>{
-      self.triggerLoad()
-    })
+    // arriveFooter.add(this.state.name, ()=>{
+    //   self.triggerLoad()
+    // })
 
   }
 
   componentWillUnmount() {
-    arriveFooter.remove(this.state.name)
+    // arriveFooter.remove(this.state.name)
   }
 
   _triggerLoad(callback) {
@@ -58,24 +58,28 @@ class AnswerList extends Component {
 
   render () {
 
-    let { answerList, isSignin, showSign } = this.props
+    let { commentList } = this.props
 
-    if (!answerList.data) {
-      return (<div></div>)
+    if (!commentList.data) {
+      return (<div className={styles.loading}>加载中...</div>)
     }
 
     return (
-      <div name="comments">
+      <div>
         <div className="container">
-          <div className={styles.answers}>
-            {answerList.data.map((answer)=>{
-              return (<div key={answer._id}><AnswerItem answer={answer} /></div>)
+          <div className={styles.comments}>
+            {commentList.data.map((comment)=>{
+              return (<div key={comment._id}><CommentItem comment={comment} /></div>)
             })}
+            {commentList.data.length == 0 ?
+              null
+            : <ListLoading
+                loading={commentList.loading}
+                more={commentList.more}
+                handleLoad={this.triggerLoad}
+                />}
           </div>
-
-          {answerList.data.length == 0 ?
-            <div className={styles.nothing}>目前尚无回复</div>
-          : <ListLoading loading={answerList.loading} more={answerList.more} handleLoad={this.triggerLoad} />}
+          {/*<div className={styles.nothing}>目前尚无回复</div>*/}
 
         </div>
       </div>
@@ -83,25 +87,27 @@ class AnswerList extends Component {
   }
 }
 
-AnswerList.propTypes = {
-  answerList: PropTypes.object.isRequired,
-  loadCommentList: PropTypes.func.isRequired,
-  showSign: PropTypes.func.isRequired
+CommentList.defaultProps = {
+  name: PropTypes.string.isRequired,
+  filters: PropTypes.object.isRequired
+}
+
+CommentList.propTypes = {
+  commentList: PropTypes.object.isRequired,
+  loadCommentList: PropTypes.func.isRequired
 }
 
 function mapStateToProps(state, props) {
   const name = props.name
   return {
-    answerList: getCommentListByName(state, name),
-    isSignin: getAccessToken(state)
+    commentList: getCommentListByName(state, name)
   }
 }
 
 function mapDispatchToProps(dispatch, props) {
   return {
-    showSign: bindActionCreators(showSign, dispatch),
     loadCommentList: bindActionCreators(loadCommentList, dispatch)
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(AnswerList)
+export default connect(mapStateToProps, mapDispatchToProps)(CommentList)

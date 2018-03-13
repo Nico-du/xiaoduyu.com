@@ -1,13 +1,14 @@
 
 import Ajax from '../common/ajax'
+import { DateDiff } from '../common/date'
 
 export function addComment({ posts_id, parent_id, reply_id, contentJSON, contentHTML, deviceId, callback }) {
   return (dispatch, getState) => {
 
     let accessToken = getState().user.accessToken
-    let commentList = getState().comment[posts_id] || null
+    let commentState = getState().comment
 
-    Ajax({
+    return Ajax({
       url: '/write-comment',
       type: 'post',
       data: {
@@ -21,19 +22,24 @@ export function addComment({ posts_id, parent_id, reply_id, contentJSON, content
       headers: { AccessToken: accessToken },
       callback: (res) => {
 
-        if (commentList && res.success && res.data) {
+        if (res.success && res.data) {
+          for (let i in commentState) {
+            // 评论 和 回复
+            if (!parent_id && i == posts_id ||
+              parent_id && i == parent_id) {
+              commentState[i].data.push(processCommentList([res.data])[0])
+            }
 
-          if (!parent_id) {
-            commentList.data.unshift(res.data)
-          } else if (parent_id) {
-            commentList.data.map(comment=>{
-              if (comment._id == parent_id) {
-                comment.reply.unshift(res.data)
+            commentState[i].data.map(item=>{
+              if (item._id == parent_id) {
+                item.reply.push(processCommentList([res.data])[0])
+                item.reply_count += 1
               }
             })
+
           }
 
-          dispatch({ type: 'SET_COMMENT_LIST_BY_NAME', name: posts_id, data: commentList })
+          dispatch({ type: 'SET_COMMENT', state: commentState })
         }
 
         callback(res)
@@ -44,13 +50,17 @@ export function addComment({ posts_id, parent_id, reply_id, contentJSON, content
   }
 }
 
+
+
+
 export function updateComment({ id, contentJSON, contentHTML, callback }) {
   return (dispatch, getState) => {
 
     let accessToken = getState().user.accessToken
     let state = getState().comment
+    let posts = getState().posts
 
-    Ajax({
+    return Ajax({
       url: '/update-comment',
       type: 'post',
       data: {
@@ -61,23 +71,55 @@ export function updateComment({ id, contentJSON, contentHTML, callback }) {
       headers: { AccessToken: accessToken },
       callback: (res) => {
 
-        if (res && res.success) {
+        if (!res || !res.success) {
+          callback(res)
+          return
+        }
 
-          for (let i in state) {
-            let data = state[i].data
-            if (data.length > 0) {
-              for (let n = 0, max = data.length; n < max; n++) {
-                if (data[n]._id == id) {
-                  state[i].data[n].content = contentJSON
-                  state[i].data[n].content_html = contentHTML
-                }
-              }
+        for (let i in state) {
+
+          state[i].data.map(item=>{
+            if (item._id == id) {
+              item.content = contentJSON
+              item.content_html = contentHTML
             }
-          }
 
-          dispatch({ type: 'SET_COMMENT', state })
+            if (!item.reply) return
+
+            item.reply.map(item=>{
+              if (item._id == id) {
+                item.content = contentJSON
+                item.content_html = contentHTML
+              }
+            })
+
+          })
 
         }
+
+        for (let i in posts) {
+
+          posts[i].data.map(item=>{
+
+            if (!item.comment) return
+
+            item.comment.map((comment, index)=>{
+              if (comment._id == id) {
+                item.comment[index].content_html = contentHTML
+
+                let text = contentHTML.replace(/<[^>]+>/g,"")
+                if (text.length > 200) text = text.slice(0, 200)+'...'
+
+                item.comment[index].content_summary = text
+              }
+            })
+
+          })
+
+        }
+
+        dispatch({ type: 'SET_POSTS', state:posts })
+        dispatch({ type: 'SET_COMMENT', state })
 
         callback(res)
 
@@ -100,7 +142,27 @@ export const loadCommentById = ({ id, callback = () => {} }) => {
 
     let headers = accessToken ? { 'AccessToken': accessToken } : null
 
-    Ajax({
+    /*
+    return loadCommentList({
+      name:   id,
+      filters: {
+        comment_id: id,
+        per_page: 1,
+        draft: 1
+      },
+      callback: (res)=>{
+        if (res.success && res.data && res.data.length > 0) {
+          // dispatch({ type: 'ADD_COMMENT', comment: res.data[0] })
+          callback(res.data[0])
+        } else {
+          callback(null)
+        }
+        // console.log(res);
+      }
+    })(dispatch, getState)
+    */
+
+    return Ajax({
       url: '/comments',
       params: data,
       headers,
@@ -119,52 +181,63 @@ export const loadCommentById = ({ id, callback = () => {} }) => {
   }
 }
 
+const processCommentList = (list) => {
+  list.map(item=>{
+    item._create_at = DateDiff(item.create_at)
+    if (item.reply) {
+      item.reply.map(item=>{
+        item._create_at = DateDiff(item.create_at)
+      })
+    }
+  })
+  return list
+}
+
 export function loadCommentList({ name, filters = {}, callback = ()=>{} }) {
   return (dispatch, getState) => {
 
     const accessToken = getState().user.accessToken
-    let answerList = getState().comment[name] || {}
+    let commentList = getState().comment[name] || {}
 
-    if (typeof(answerList.more) != 'undefined' && !answerList.more ||
-      answerList.loading
+    if (typeof(commentList.more) != 'undefined' && !commentList.more ||
+      commentList.loading
     ) {
       callback()
       return
     }
 
-    if (!answerList.data) {
-      answerList.data = []
+    if (!commentList.data) {
+      commentList.data = []
     }
 
-    if (!answerList.filters) {
-      filters.gt_create_at = 0
-      filters.per_page = 30
-      answerList.filters = filters
-
+    if (!commentList.filters) {
+      filters.gt_create_at = filters.gt_create_at || 0
+      filters.per_page = filters.per_page || 30
+      commentList.filters = filters
     } else {
-      filters = answerList.filters
-      if (answerList.data[answerList.data.length - 1]) {
-        filters.gt_create_at = new Date(answerList.data[answerList.data.length - 1].create_at).getTime()
+      filters = commentList.filters
+      if (commentList.data[commentList.data.length - 1]) {
+        filters.gt_create_at = new Date(commentList.data[commentList.data.length - 1].create_at).getTime()
       }
     }
 
-    if (!answerList.more) {
-      answerList.more = true
+    if (!commentList.more) {
+      commentList.more = true
     }
 
-    if (!answerList.count) {
-      answerList.count = 0
+    if (!commentList.count) {
+      commentList.count = 0
     }
 
-    if (!answerList.loading) {
-      answerList.loading = true
+    if (!commentList.loading) {
+      commentList.loading = true
     }
 
-    dispatch({ type: 'SET_COMMENT_LIST_BY_NAME', name, data: answerList })
+    dispatch({ type: 'SET_COMMENT_LIST_BY_NAME', name, data: commentList })
 
     let headers = accessToken ? { 'AccessToken': accessToken } : null
 
-    Ajax({
+    return Ajax({
       url: '/comments',
       params: filters,
       headers,
@@ -175,15 +248,15 @@ export function loadCommentList({ name, filters = {}, callback = ()=>{} }) {
           return
         }
 
-        let _answerList = res.data
+        let _commentList = res.data
 
-        answerList.more = res.data.length < answerList.filters.per_page ? false : true
-        answerList.data = answerList.data.concat(_answerList)
-        answerList.filters = filters
-        answerList.count = 0
-        answerList.loading = false
+        commentList.more = res.data.length < commentList.filters.per_page ? false : true
+        commentList.data = commentList.data.concat(processCommentList(_commentList))
+        commentList.filters = filters
+        commentList.count = 0
+        commentList.loading = false
 
-        dispatch({ type: 'SET_COMMENT_LIST_BY_NAME', name, data: answerList })
+        dispatch({ type: 'SET_COMMENT_LIST_BY_NAME', name, data: commentList })
         callback(res)
       }
     })

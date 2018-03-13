@@ -1,5 +1,4 @@
-import React, { Component, PropTypes } from 'react'
-
+import React, { Component } from 'react'
 
 class Tabbar extends Component {
 
@@ -17,7 +16,6 @@ class Tabbar extends Component {
     this.setState({
       index: key
     })
-
     tabs[key].callback()
   }
 

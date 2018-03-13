@@ -1,20 +1,16 @@
 
-import React, { PropTypes } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom'
-
-import { Editor, EditorState, RichUtils, Entity, AtomicBlockUtils, convertToRaw, convertFromRaw, CompositeDecorator } from 'draft-js'
+import { Editor, EditorState, RichUtils, Entity, AtomicBlockUtils, convertToRaw, convertFromRaw, CompositeDecorator, Modifier } from 'draft-js'
 
 import redraft from 'redraft'
 
-// import FileUpload from '../../components/file-upload'
 import QiniuUploadImage from '../../components/qiniu-upload-image'
 
-import styles from './style.scss'
-
-import './Draft.css'
+import 'draft-js/dist/Draft.css'
 import './RichEditor.css'
 
-import Device from '../../common/device'
+// import Device from '../../common/device'
 import Embed from '../../components/embed'
 import Iframe from '../../components/iframe'
 
@@ -24,6 +20,62 @@ function getBlockStyle(block) {
     default: return null;
   }
 }
+
+
+function findLinkEntities(contentBlock, callback, contentState) {
+  contentBlock.findEntityRanges(
+    (character) => {
+      const entityKey = character.getEntity();
+      return (
+        entityKey !== null &&
+        contentState.getEntity(entityKey).getType() === 'LINK'
+      );
+    },
+    callback
+  );
+}
+
+const Link = (props) => {
+  const {url} = props.contentState.getEntity(props.entityKey).getData();
+  return (
+    <a href={url} style={styles.link}>
+      {props.children}
+    </a>
+  );
+};
+
+const styles = {
+  root: {
+    fontFamily: '\'Georgia\', serif',
+    padding: 20,
+    width: 600,
+  },
+  buttons: {
+    marginBottom: 10,
+  },
+  urlInputContainer: {
+    marginBottom: 10,
+  },
+  urlInput: {
+    fontFamily: '\'Georgia\', serif',
+    marginRight: 10,
+    padding: 3,
+  },
+  editor: {
+    border: '1px solid #ccc',
+    cursor: 'text',
+    minHeight: 80,
+    padding: 10,
+  },
+  button: {
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  link: {
+    color: '#3b5998',
+    textDecoration: 'underline',
+  },
+};
 
 class StyleButton extends React.Component {
 
@@ -42,9 +94,7 @@ class StyleButton extends React.Component {
     }
 
     return (
-      <span className={className} onMouseDown={this.onToggle}>
-        {this.props.label}
-      </span>
+      <span className={className + ' ' + this.props.className} onMouseDown={this.onToggle}></span>
     )
   }
 
@@ -57,64 +107,22 @@ const BLOCK_TYPES = [
   // {label: 'H4', style: 'header-four'},
   // {label: 'H5', style: 'header-five'},
   // {label: 'H6', style: 'header-six'},
-  // {label: 'Title', style: 'header-five'},
-  {label: 'Blockquote', style: 'blockquote'},
-  {label: 'UL', style: 'unordered-list-item'},
-  {label: 'OL', style: 'ordered-list-item'},
-  {label: 'Code Block', style: 'code-block'},
+  { className: 'title', label: 'Title', style: 'header-five'},
+  { className: 'blockquote', label: 'Blockquote', style: 'blockquote'},
+  { className: 'ul', label: 'ul', style: 'unordered-list-item'},
+  { className: 'ol', label: 'ol', style: 'ordered-list-item'},
+  { className: 'code-block', label: 'code', style: 'code-block'}
 ]
 
-const BlockStyleControls = (props) => {
-
-  const { editorState } = props
-  const selection = editorState.getSelection();
-  const blockType = editorState
-    .getCurrentContent()
-    .getBlockForKey(selection.getStartKey())
-    .getType();
-
-  return (
-    <div className="RichEditor-controls">
-      {BLOCK_TYPES.map((type) =>
-        <StyleButton
-          key={type.label}
-          active={type.style === blockType}
-          label={type.label}
-          onToggle={props.onToggle}
-          style={type.style}
-        />
-      )}
-    </div>
-  )
-}
-
-
-// -----
 
 var INLINE_STYLES = [
-  {label: '加粗', style: 'BOLD'},
-  {label: '斜体', style: 'ITALIC'},
-  {label: '下划线', style: 'UNDERLINE'}
+  { className:"bold", label: 'bold', style: 'BOLD'},
+  { className:"italic", label: 'italic', style: 'ITALIC'},
+  { className:"underline", label: 'underline', style: 'UNDERLINE'}
   // {label: 'Monospace', style: 'CODE'}
 ]
 
-const InlineStyleControls = (props) => {
-  var currentStyle = props.editorState.getCurrentInlineStyle();
-  return (
-    <div className="RichEditor-controls">
-      {INLINE_STYLES.map(type =>
-        <StyleButton
-          key={type.label}
-          active={currentStyle.has(type.style)}
-          label={type.label}
-          onToggle={props.onToggle}
-          style={type.style}
-        />
-      )}
-    </div>
-  );
-};
-
+// 编辑器控制器
 const Controls = (props) => {
 
   const { editorState } = props
@@ -135,6 +143,7 @@ const Controls = (props) => {
           active={type.style === blockType}
           label={type.label}
           onToggle={props.toggleBlockType}
+          className={type.className}
           style={type.style}
         />
       )}
@@ -145,9 +154,18 @@ const Controls = (props) => {
           active={currentStyle.has(type.style)}
           label={type.label}
           onToggle={props.toggleInlineStyle}
+          className={type.className}
           style={type.style}
         />
       )}
+
+      <span className="RichEditor-styleButton image">
+        <QiniuUploadImage upload={props.addImage} name=" " />
+      </span>
+      <span href="javascript:void(0)" className="RichEditor-styleButton video" onClick={props.addVideo}></span>
+      <span href="javascript:void(0)" className="RichEditor-styleButton link" onClick={props.addLink}></span>
+      {/*<span href="javascript:void(0)" className="RichEditor-styleButton music" onClick={props.addMusic}></span>*/}
+
     </div>
   );
 };
@@ -155,7 +173,6 @@ const Controls = (props) => {
 // -----
 
 function mediaBlockRenderer(block) {
-
   if (block.getType() === 'atomic') {
     return {
       component: Media,
@@ -165,68 +182,33 @@ function mediaBlockRenderer(block) {
   return null;
 }
 
-const Audio = (props) => {
-  return <audio controls src={props.src} style={styles.media} />;
-};
-
-const Image = (props) => {
-  return <img src={props.src} style={styles.media} />;
-};
-
-const Video = (props) => {
-  return <video controls src={props.src} style={styles.media} />;
-};
-
 const Media = (props) => {
 
-  const entity = Entity.get(props.block.getEntityAt(0));
-  const {src} = entity.getData();
-  const type = entity.getType();
+  const entity = Entity.get(props.block.getEntityAt(0))
+  const { src } = entity.getData()
+  const type = entity.getType()
 
   let media;
 
   if (type === 'link') {
-    media = <a href={src}>{src}</a>;
+    media = <a href={src} target="_blank" rel="nofollow">{src}</a>
   } else if (type === 'image') {
-    media = <Image src={src} />;
+    media = <img src={src} />
   } else if (type === 'youtube') {
-
     let url = 'https://www.youtube.com/embed/' + src
     media = <iframe src={url}></iframe>
-
   } else if (type === 'youku') {
-
     let url = 'https://player.youku.com/embed/' + src
     media = <iframe src={url}></iframe>
-
-    // let url = "http://player.youku.com/embed/" + src
-    // media = <Iframe src={url} frameborder="0" border="0" width="auto" height="auto" position="" allowfullscreen></Iframe>
-    /*
-    if (Device.isMobileDevice()) {
-      let url = "http://player.youku.com/embed/" + src
-      media = <Iframe src={url} frameborder="0" border="0" width="auto" height="auto" position="" allowfullscreen></Iframe>
-    } else {
-      let url = "http://player.youku.com/player.php/sid/"+src+"/v.swf"
-      media = <Embed src={url}></Embed>
-    }
-    */
-  // } else if (type === 'tudou') {
-    // let url = "http://www.tudou.com/programs/view/html5embed.action?code="+src
-    // media = <Iframe src={url} allowtransparency="true" allowfullscreen="true" allowfullscreenInteractive="true" scrolling="no" border="0" frameborder="0" width="auto" height="auto" position=""></Iframe>
-    // <iframe url={url} allowtransparency="true" allowfullscreen="true" allowfullscreenInteractive="true" scrolling="no" border="0" frameborder="0"></iframe>
   } else if (type === 'qq') {
-
-    // let url = "https://v.qq.com/iframe/player.html?vid="+src+"&tiny=0&auto=0"
-    // media = <Iframe frameborder="0" src={url} width="auto" height="auto" position="" allowfullscreen></Iframe>
-    if (Device.isMobileDevice()) {
-      let src = "https://v.qq.com/iframe/player.html?vid="+src+"&tiny=0&auto=0"
-      // let url = "https://v.qq.com/iframe/player.html?vid="+src+"&tiny=0&auto=0"
-      media = <Iframe src={url} width="auto" height="auto" position=""></Iframe>
-    } else {
-      let url = "https://imgcache.qq.com/tencentvideo_v1/playerv3/TPout.swf?max_age=86400&v=20161117&vid="+src+"&auto=0"
-      // let url = "https://static.video.qq.com/TPout.swf?vid="+src+"&auto=0"
-      media = <Embed src={url}></Embed>
-    }
+    let url = "https://v.qq.com/iframe/player.html?vid="+src+"&tiny=0&auto=0"
+    media = <Iframe src={url} width="auto" height="auto" position=""></Iframe>
+  } else if (type === '163-music-song') {
+    let url = "//music.163.com/outchain/player?type=2&id="+src+"&auto=1&height=66"
+    media = <Iframe src={url} width="auto" height="86" position=""></Iframe>
+  } else if (type === '163-music-playlist') {
+    let url = "//music.163.com/outchain/player?type=0&id="+src+"&auto=1&height=430"
+    media = <Iframe src={url} width="auto" height="450" position=""></Iframe>
   }
 
   return media;
@@ -249,14 +231,19 @@ function getEntityStrategy(mutability) {
   };
 }
 
+/*
 function getDecoratedStyle(mutability) {
+
+  return null;
+
   switch (mutability) {
-    case 'IMMUTABLE': return styles.immutable;
-    case 'MUTABLE': return styles.mutable;
-    case 'SEGMENTED': return styles.segmented;
+    // case 'IMMUTABLE': return styles.immutable;
+    // case 'MUTABLE': return styles.mutable;
+    // case 'SEGMENTED': return styles.segmented;
     default: return null;
   }
 }
+
 
 const TokenSpan = (props) => {
   const style = getDecoratedStyle(
@@ -268,6 +255,7 @@ const TokenSpan = (props) => {
     </span>
   )
 }
+
 
 function findLinkEntities(contentBlock, callback, contentState) {
 
@@ -282,7 +270,9 @@ function findLinkEntities(contentBlock, callback, contentState) {
     callback
   );
 }
+*/
 
+/*
 const Link = (props) => {
   const {url} = props.contentState.getEntity(props.entityKey).getData();
   return (
@@ -291,42 +281,7 @@ const Link = (props) => {
     </a>
   );
 };
-
-const decorator = new CompositeDecorator([
-  {
-    strategy: findLinkEntities,
-    component: Link,
-  },
-  {
-    strategy: getEntityStrategy('IMMUTABLE'),
-    component: TokenSpan,
-  },
-  {
-    strategy: getEntityStrategy('MUTABLE'),
-    component: TokenSpan,
-  },
-  {
-    strategy: getEntityStrategy('SEGMENTED'),
-    component: TokenSpan,
-  }
-])
-
-// -----
-
-const stylesa = {
-  code: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    fontFamily: '"Inconsolata", "Menlo", "Consolas", monospace',
-    fontSize: 16,
-    padding: 2,
-  },
-  codeBlock: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    fontFamily: '"Inconsolata", "Menlo", "Consolas", monospace',
-    fontSize: 16,
-    padding: 20,
-  }
-};
+*/
 
 const addBreaklines = (children) => children.map(child => [child, <br />]);
 
@@ -375,37 +330,41 @@ const renderers = {
    * Entities receive children and the entity data
    */
   entities: {
-    // key is the entity key value from raw
-    // link: (children, data, { key }) => <a href={data.src.url}>{data.src.title || data.src.url}</a>,
-
     youku: (children, data, { key }) => <div key={key} data-youku={data.src}></div>,
     tudou: (children, data, { key }) => <div key={key} data-tudou={data.src}></div>,
     qq: (children, data, { key }) => <div key={key} data-qq={data.src}></div>,
     youtube: (children, data, { key }) => <div key={key} data-youtube={data.src}></div>,
     image: (children, data, { key }) => <img key={key} src={data.src} />,
-    LINK: (children, data, { key }) => <a key={key} href={data.url}>{children}</a>
-    // youku: (children, data, { key }) => <div><Embed src={`http://player.youku.com/player.php/sid/${data.src}/v.swf`}></Embed></div>,
-    // tudou: (children, data, { key }) => <div><Iframe src={`http://www.tudou.com/programs/view/html5embed.action?code=${data.src}`} allowtransparency="true" allowfullscreen="true" allowfullscreenInteractive="true" scrolling="no" border="0" frameborder="0" width="auto" height="auto" position=""></Iframe></div>,
-    // qq: (children, data, { key }) => <div><Embed src={`http://static.video.qq.com/TPout.swf?vid=${data.src}&auto=0`}></Embed></div>,
-  },
+    '163-music-song': (children, data, { key }) => <div key={key} data-163musicsong={data.src}></div>,
+    '163-music-playlist': (children, data, { key }) => <div key={key} data-163musicplaylist={data.src}></div>,
+    LINK: (children, data, { key }) => <a key={key} href={data.url} target="_blank" rel="nofollow">{children}</a>
+  }
 }
 
 
-class MyEditor extends React.Component {
+export class MyEditor extends React.Component {
 
   constructor(props) {
     super(props)
 
-    const { syncContent, content, readOnly } = this.props
+    const { syncContent, content, readOnly, placeholder } = this.props
+
+
+    const decorator = new CompositeDecorator([
+      {
+        strategy: findLinkEntities,
+        component: Link,
+      },
+    ]);
 
     this.state = {
-      syncContent: syncContent || null, // 编辑器改变的时候，调给外部组件使用
-      readOnly: readOnly || false,
+      syncContent: syncContent, // 编辑器改变的时候，调给外部组件使用
+      readOnly: readOnly,
       editorState: content
         ? EditorState.createWithContent(convertFromRaw(JSON.parse(content)), decorator)
         : EditorState.createEmpty(decorator),
       rendered: null,
-      scrollY: 0
+      placeholder: placeholder
     }
 
     this.onChange = this._onChange.bind(this)
@@ -414,49 +373,23 @@ class MyEditor extends React.Component {
     this.addVideo = this._addVideo.bind(this)
     this.addImage = this._addImage.bind(this)
     this.addLink = this._addLink.bind(this)
+    this.addMusic = this._addMusic.bind(this)
     this.handleKeyCommand = this._handleKeyCommand.bind(this)
-    this.timer = null
-    this.undo = this._undo.bind(this)
-    this.redo = this._redo.bind(this)
-    this.onKeyDown = this._onKeyDown.bind(this)
+    // this.undo = this._undo.bind(this)
+    // this.redo = this._redo.bind(this)
   }
 
   componentDidMount() {
-
-    const that = this
     this.onChange(this.state.editorState)
-
-    // let scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0
-
-    // document.onkeydown = (event) => {
-    //   if (document.activeElement.className == 'public-DraftEditor-content') {
-    //     that.state.scrollY = (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0) - 50
-    //   }
-    // }
-
-    document.ontouchend = (event) => {
-      if (document.activeElement.className == 'public-DraftEditor-content') {
-        that.state.scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0
-      }
-    }
-
-    // this.refs.editor.focus()
-    // console.log(document.getElementsByTagName('public-DraftEditor-content')[0])
-  }
-
-  _onKeyDown(event) {
-    // alert('23')
-    // var e = event || window.event
-    // console.log(e.keyCode)
+    this.props.getEditor(this.refs.editor)
   }
 
   _onChange(editorState) {
 
     const that = this
 
-    this.setState({ editorState }, () => {
-      // setTimeout(() => that.refs.editor.focus(), 0);
-    })
+    this.setState({ editorState }, () => {})
+
 
     const { syncContent } = this.state
     const { draftHtml } = this.refs
@@ -481,7 +414,6 @@ class MyEditor extends React.Component {
 
         if (!_html) {
           syncContent('', '')
-          // syncContent(JSON.stringify({}), html)
           return
         }
 
@@ -489,10 +421,6 @@ class MyEditor extends React.Component {
 
       }, 100)
 
-    }
-
-    if (that.state.scrollY) {
-      window.scrollTo(0, that.state.scrollY)
     }
 
   }
@@ -515,26 +443,9 @@ class MyEditor extends React.Component {
     )
   }
 
-  /*
-  _addLink() {
-
-    // {url:'xiaoduyu.com',title:'小度鱼'}
-    this._promptForMedia('link', '123123')
-    // this._promptForMedia('qq', '123123123')
-
-    return
-
-    let url = prompt("请输入url地址","");
-
-    if (!url) {
-      return
-    }
-  }
-  */
-
   _addVideo() {
 
-    let url = prompt("请输入视频地址，目前支持优酷、腾讯、土豆","");
+    let url = prompt("请输入视频地址，目前支持优酷、腾讯视频、YouTuBe","");
 
     if (!url) {
       return
@@ -553,56 +464,33 @@ class MyEditor extends React.Component {
       if (id) {
         this._promptForMedia('qq', id)
       } else {
-        alert('添加失败，可能是不支持该地址格式')
+        alert('地址匹配失败')
       }
 
     } else if (url.indexOf('youku.com') > -1) {
 
       let id = url.match(/\/id\_(.*)\.html/)
-
       id = id && id.length > 0 ? id[1] : ''
 
       if (id) {
         this._promptForMedia('youku', id)
       } else {
-        alert('添加失败，可能是不支持该地址格式')
+        alert('地址匹配失败')
       }
 
     } else if (url.indexOf('youtube.com') > -1) {
 
-        let id = url.match(/\/watch\?v\=([0-9a-zA-z\_\-]{1,})$/) || []
+      let id = url.match(/\/watch\?v\=([0-9a-zA-z\_\-]{1,})$/) || []
+      id = id && id.length > 0 ? id[1] : ''
 
-        id = id && id.length > 0 ? id[1] : ''
-
-        if (id) {
-          this._promptForMedia('youtube', id)
-        } else {
-          alert('添加失败，可能是不支持该地址格式')
-        }
-
-    // } else if (url.indexOf('tudou.com') > -1) {
-    //
-    //   let id = url.match(/\/albumplay\/([0-9a-zA-z\_\-]{1,})\/([0-9a-zA-z\_\-]{1,})\.html/) || []
-    //   id = id && id.length > 0 ? id[2] : ''
-    //
-    //   if (!id) {
-    //     id = url.match(/\/view\/([0-9a-zA-z\_]{1,})\//) || []
-    //     id = id && id.length > 0 ? id[1] : ''
-    //   }
-    //
-    //   if (!id) {
-    //     id = url.match(/\/listplay\/([0-9a-zA-z\_\-]{1,})\/([0-9a-zA-z\_\-]{1,})(?=\.html|\/)/) || []
-    //     id = id && id.length > 0 ? id[2] : ''
-    //   }
-    //
-    //   if (id) {
-    //     this._promptForMedia('tudou', id)
-    //   } else {
-    //     alert('添加失败，可能是不支持该地址格式')
-    //   }
+      if (id) {
+        this._promptForMedia('youtube', id)
+      } else {
+        alert('地址匹配失败')
+      }
 
     } else {
-      alert('无效的地址')
+      alert('地址匹配失败')
     }
 
   }
@@ -611,31 +499,58 @@ class MyEditor extends React.Component {
     this._promptForMedia('image', url)
   }
 
+  _addMusic() {
+
+    let url = prompt("请输入网易音乐的播放地址","");
+
+    if (!url) {
+      return
+    }
+
+    if (url.indexOf('music.163.com') > -1) {
+
+      let id = url.match(/\?id\=([0-9]{1,})$/) || []
+      id = id && id.length > 0 ? id[1] : ''
+
+
+      if (id && url.indexOf('song') > -1) {
+        this._promptForMedia('163-music-song', id)
+      } else if (id && url.indexOf('playlist') > -1) {
+        this._promptForMedia('163-music-playlist', id)
+      } else {
+        alert('不能匹配该地址')
+      }
+
+    } else {
+      alert('不能匹配该地址')
+    }
+
+  }
+
   _addLink(e) {
 
-    const {editorState} = this.state;
+    const { editorState } = this.state;
     const selection = editorState.getSelection();
     if (!selection.isCollapsed()) {
       let url = prompt("请输入url地址以http://或https://开头","");
 
       if (!url) return
 
-      // const { editorState } = this.state;
       const contentState = editorState.getCurrentContent();
       const contentStateWithEntity = contentState.createEntity(
         'LINK',
         'MUTABLE',
-        {url: url}
+        { url: url }
       );
       const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
       const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithEntity });
-
 
       this.onChange(RichUtils.toggleLink(
         newEditorState,
         newEditorState.getSelection(),
         entityKey
-      ));
+      ))
+
     } else {
       alert('请先选取需要添加链接的文字内容')
     }
@@ -651,18 +566,8 @@ class MyEditor extends React.Component {
       editorState,
       entityKey,
       ' '
-    ));
-    /*
-    this.setState({
-      editorState: AtomicBlockUtils.insertAtomicBlock(
-        editorState,
-        entityKey,
-        ' '
-      )
-    });
+    ))
 
-    this.onChange(this.state.editorState);
-    */
   }
 
   _handleKeyCommand(command) {
@@ -676,6 +581,7 @@ class MyEditor extends React.Component {
     return false;
   }
 
+  /*
   _undo() {
     const that = this
     this.onChange(EditorState.undo(this.state.editorState))
@@ -683,74 +589,37 @@ class MyEditor extends React.Component {
       that.onChange(EditorState.redo(that.state.editorState))
       that.state.editorState.focus()
     })
-
-    // this.onChange(EditorState.redo(this.state.editorState))
   }
 
   _redo() {
-    // const that = this
     this.onChange(EditorState.redo(this.state.editorState))
-    // setTimeout(()=>{
-    //   that.onChange(EditorState.undo(that.state.editorState))
-    // }, 100)
   }
+  */
 
   render() {
-
-    const { editorState, readOnly, rendered } = this.state
     const self = this
+    const { editorState, readOnly, rendered, placeholder } = this.state
+    const { displayControls } = this.props
 
-    let className = 'RichEditor-editor';
 
-    /*
-    const options = {
-      url: 'image',
-      uploadSuccess: (resp) => {
-        self.addImage(resp.image.middle)
-      }
-    }
-    */
-
-    const upload = (imageName) => {
-      self.addImage(imageName)
-    }
-
-    return(<div className={className}>
+    {/* stripPastedStyles=true 清除复制文本样式*/}
+    return(<div className="RichEditor-editor">
 
             <div ref="draftHtml" style={{display:'none'}}>
               {rendered}
             </div>
 
-            <div className={styles['media-tools']}>
-              <span>
-                <QiniuUploadImage upload={upload} />
-                {/*<FileUpload options={options}>上传图片</FileUpload>*/}
-              </span>
-              <span>
-                <a href="javascript:void(0)" className="button-white" onClick={this.addVideo}>添加视频</a>
-              </span>
-
-              <span>
-                <a href="javascript:void(0)" className="button-white" onClick={this.addLink}>添加链接</a>
-              </span>
-              {/*
-              <span>
-                <a href="javascript:void(0)" onClick={this.undo}>撤销</a>
-              </span>
-
-              <span>
-                <a href="javascript:void(0)" onClick={this.redo}>恢返回</a>
-              </span>
-              */}
-
-            </div>
-
-            <Controls
-              editorState={editorState}
-              toggleBlockType={this.toggleBlockType}
-              toggleInlineStyle={this.toggleInlineStyle}
-            />
-
+            {displayControls ?
+              <Controls
+                editorState={editorState}
+                toggleBlockType={this.toggleBlockType}
+                toggleInlineStyle={this.toggleInlineStyle}
+                addVideo={this.addVideo}
+                addLink={this.addLink}
+                addImage={this.addImage}
+                addMusic={this.addMusic}
+              />
+              : null}
 
             <Editor
               blockRendererFn={mediaBlockRenderer}
@@ -758,8 +627,9 @@ class MyEditor extends React.Component {
               blockStyleFn={getBlockStyle}
               onChange={this.onChange}
               handleKeyCommand={this.handleKeyCommand}
-              placeholder="请输入正文"
+              placeholder={placeholder}
               ref="editor"
+              stripPastedStyles={true}
               spellCheck
             />
 
@@ -767,5 +637,13 @@ class MyEditor extends React.Component {
   }
 }
 
+MyEditor.defaultProps = {
+  displayControls: true,
+  syncContent: null,
+  content: '',
+  readOnly: false,
+  getEditor: (editor)=>{},
+  placeholder: '请输入正文'
+}
 
 export default MyEditor
